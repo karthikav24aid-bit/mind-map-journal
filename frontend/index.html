@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mind Map Journal - Ultimate</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- D3.js for Mind Map -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body class="login-state">
+
+    <!-- Auth Overlay -->
+    <div id="authOverlay" class="auth-overlay">
+        <div class="auth-card glass" id="loginCard">
+            <h2>Welcome Back</h2>
+            <p>Secure your thoughts in your mind map</p>
+            <input type="text" id="username" placeholder="Username (admin)">
+            <input type="password" id="password" placeholder="Password (admin)">
+            <button id="loginBtn" class="btn-primary">Sign In</button>
+            <p class="toggle-auth">New here? <span id="toRegister">Create Account</span></p>
+            <p id="loginError" class="error-text"></p>
+        </div>
+
+        <div class="auth-card glass hidden" id="registerCard">
+            <h2>Start Journey</h2>
+            <p>Experience the future of journaling</p>
+            <input type="text" id="regUsername" placeholder="Username">
+            <input type="email" id="regEmail" placeholder="Email">
+            <input type="password" id="regPassword" placeholder="Password">
+            <button id="registerBtn" class="btn-primary">Register</button>
+            <p class="toggle-auth">Already a member? <span id="toLogin">Sign In</span></p>
+            <p id="regError" class="error-text"></p>
+        </div>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar glass">
+        <div class="sidebar-header">
+            <span class="logo">🧠 MindMap</span>
+        </div>
+        <ul class="nav-links">
+            <li class="active" data-module="journal"><i class="fas fa-book"></i><span>Journal</span></li>
+            <li data-module="mindmap"><i class="fas fa-project-diagram"></i><span>Mind Map</span></li>
+            <li data-module="insights"><i class="fas fa-chart-line"></i><span>Insights</span></li>
+            <li data-module="export"><i class="fas fa-file-export"></i><span>Export</span></li>
+            <li data-module="settings"><i class="fas fa-cog"></i><span>Settings</span></li>
+        </ul>
+        <div class="sidebar-footer">
+            <div id="currentUser" class="user-display">
+                <div class="user-avatar">U</div>
+                <div class="user-name">User</div>
+            </div>
+            <button id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <!-- Module: Journal -->
+        <section id="journalModule" class="module active">
+            <header class="module-header">
+                <div>
+                    <h1>Your Journal</h1>
+                    <p id="currentDate"></p>
+                </div>
+                <div class="search-bar glass">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search entries...">
+                </div>
+            </header>
+
+            <div class="journal-composer glass">
+                <textarea id="journalInput" placeholder="What's on your mind?"></textarea>
+                <div class="composer-footer">
+                    <div class="meta-inputs">
+                        <select id="moodSelect">
+                            <option value="happy">😊 Happy</option>
+                            <option value="calm">😌 Calm</option>
+                            <option value="neutral" selected>😐 Neutral</option>
+                            <option value="focused">🧠 Focused</option>
+                            <option value="anxious">😰 Anxious</option>
+                        </select>
+                        <select id="categorySelect">
+                            <option value="General">📁 General</option>
+                            <option value="Ideas">💡 Ideas</option>
+                            <option value="Personal">👤 Personal</option>
+                            <option value="Work">💼 Work</option>
+                        </select>
+                        <input type="text" id="tagsInput" placeholder="Tags (tag1, tag2)">
+                    </div>
+                    <button id="addBtn" class="btn-primary">Capture</button>
+                </div>
+            </div>
+            <div id="status"></div>
+            <ul id="entryList" class="entry-list"></ul>
+        </section>
+
+        <!-- Module: Mind Map -->
+        <section id="mindmapModule" class="module">
+            <header class="module-header">
+                <h1>Interactive Mind Map</h1>
+                <div class="map-controls">
+                    <button id="refreshMap" class="btn-secondary"><i class="fas fa-sync"></i> Refresh</button>
+                    <button id="centerMap" class="btn-secondary"><i class="fas fa-compress"></i> Center</button>
+                </div>
+            </header>
+            <div class="mindmap-container glass">
+                <svg id="mindmapSvg"></svg>
+                <div class="map-overlay">
+                    <p>Drag nodes to organize. Hover for details.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module: Insights -->
+        <section id="insightsModule" class="module">
+            <header class="module-header">
+                <h1>Personal Insights</h1>
+            </header>
+            <div class="insights-dashboard">
+                <div class="stat-card glass">
+                    <i class="fas fa-pencil-alt"></i>
+                    <h2 id="statTotal">0</h2>
+                    <p>Total Entries</p>
+                </div>
+                <div class="stat-card glass">
+                    <i class="fas fa-fire"></i>
+                    <h2 id="statStreak">1</h2>
+                    <p>Day Streak</p>
+                </div>
+                <div class="stat-card glass wide">
+                    <h3>Mood Pulse</h3>
+                    <div id="moodChart" class="bar-chart"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module: Export -->
+        <section id="exportModule" class="module">
+            <header class="module-header">
+                <h1>Export & Backup</h1>
+            </header>
+            <div class="export-grid">
+                <div class="export-card glass">
+                    <i class="fas fa-file-pdf"></i>
+                    <h3>Export as PDF</h3>
+                    <p>Professional report of your mind maps and journals.</p>
+                    <button id="exportPdfBtn" class="btn-primary">Download PDF</button>
+                </div>
+                <div class="export-card glass">
+                    <i class="fas fa-file-code"></i>
+                    <h3>JSON Backup</h3>
+                    <p>Full archive of your data for backup or portability.</p>
+                    <button id="exportJsonBtn" class="btn-primary">Download JSON</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module: Settings -->
+        <section id="settingsModule" class="module">
+            <header class="module-header">
+                <h1>Preferences</h1>
+            </header>
+            <div class="settings-list glass">
+                <div class="setting-group">
+                    <h3>Visuals</h3>
+                    <div class="setting-item">
+                        <span>Glassmorphism Effect</span>
+                        <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <h3>Security</h3>
+                    <div class="setting-item">
+                        <span>Encryption</span>
+                        <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

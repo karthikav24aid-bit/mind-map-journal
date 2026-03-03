@@ -1,0 +1,40 @@
+[
+  {
+    "id": "mm3ahtfttjgn3l",
+    "text": "good",
+    "createdAt": "2026-02-26T09:57:27.497Z"
+  },
+  {
+    "id": "mm4z9rkozfetsj",
+    "userId": "u1",
+    "text": "Exploring the Mind Map Journal app. It looks quite modern but shows a sync error.",
+    "mood": "neutral",
+    "tags": [],
+    "createdAt": "2026-02-27T14:18:48.408Z"
+  },
+  {
+    "id": "mm4zati7nh4vzq",
+    "userId": "u1",
+    "text": "This is a test entry to see if it saves.",
+    "mood": "neutral",
+    "tags": [],
+    "createdAt": "2026-02-27T14:19:37.567Z"
+  },
+  {
+    "id": "mm69n2lg450fuq",
+    "userId": "u1",
+    "text": "i am sad right now",
+    "mood": "neutral",
+    "tags": [],
+    "createdAt": "2026-02-28T11:56:51.556Z"
+  },
+  {
+    "id": "mm9v3iiep0nnl9",
+    "userId": "u1",
+    "text": "Exploring the new D3.js Mind Map features today! #d3js #visualize",
+    "mood": "neutral",
+    "category": "General",
+    "tags": [],
+    "createdAt": "2026-03-03T00:20:49.142Z"
+  }
+]
