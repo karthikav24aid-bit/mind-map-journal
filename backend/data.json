@@ -36,5 +36,32 @@
     "category": "General",
     "tags": [],
     "createdAt": "2026-03-03T00:20:49.142Z"
+  },
+  {
+    "id": "mmd7p5guj0djdx",
+    "userId": "u1",
+    "text": "Verified: Backend and Mind Map communication is fixed!",
+    "mood": "neutral",
+    "category": "Ideas",
+    "tags": [],
+    "createdAt": "2026-03-05T08:36:52.590Z"
+  },
+  {
+    "id": "mmd7vo7os4ituh",
+    "userId": "u1",
+    "text": "i am sad right now",
+    "mood": "neutral",
+    "category": "General",
+    "tags": [],
+    "createdAt": "2026-03-05T08:41:56.820Z"
+  },
+  {
+    "id": "mmd7wpm2e4rlb8",
+    "userId": "u1",
+    "text": "i am lazy and sad right now",
+    "mood": "neutral",
+    "category": "General",
+    "tags": [],
+    "createdAt": "2026-03-05T08:42:45.290Z"
   }
 ]

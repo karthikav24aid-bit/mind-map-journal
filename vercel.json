@@ -16,7 +16,7 @@
             "dest": "backend/server.js"
         },
         {
-            "src": "/entries/(.*)",
+            "src": "/entries(/.*)?",
             "dest": "backend/server.js"
         },
         {

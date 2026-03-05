@@ -1,4 +1,12 @@
-const API_BASE = window.location.origin.includes('localhost') ? 'http://localhost:5000' : '';
+// compute API base URL, allow override via query param
+const queryParams = new URLSearchParams(window.location.search);
+const apiOverride = queryParams.get('api');
+const DEFAULT_API = 'http://localhost:5000';
+const API_BASE = apiOverride || (
+    window.location.origin.includes('localhost') || window.location.protocol === 'file:'
+        ? DEFAULT_API
+        : ''
+);
 
 // State
 let currentUser = JSON.parse(localStorage.getItem('user')) || null;
@@ -107,31 +115,43 @@ function showModule(name) {
 
 // --- Journal Operations ---
 async function loadEntries() {
+    const statusEl = document.getElementById('status');
+    statusEl.textContent = '';
     try {
         const res = await fetch(`${API_BASE}/entries`, {
-            headers: { 'user-id': currentUser.id }
+            headers: { 'user-id': currentUser?.id }
         });
+        if (!res.ok) {
+            const err = await res.text();
+            statusEl.textContent = `Load failed: ${err}`;
+            return;
+        }
         entries = await res.json();
         renderEntries(entries);
     } catch (err) {
-        console.error('Failed to load entries');
+        console.error('Failed to load entries', err);
+        statusEl.textContent = 'Unable to reach server. Is backend running?';
     }
 }
 
 function renderEntries(data) {
-    entryList.innerHTML = '';
     [...data].reverse().forEach(entry => {
         const li = document.createElement('li');
         li.className = 'entry-card glass';
+        const entryDate = entry.createdAt ? new Date(entry.createdAt).toLocaleString() : 'Date Unknown';
+        const entryText = entry.text || 'No content';
+        const entryTags = Array.isArray(entry.tags) ? entry.tags : [];
+        const entryCategory = entry.category || 'General';
+
         li.innerHTML = `
             <div class="entry-header">
-                <span><i class="fas fa-calendar-alt"></i> ${new Date(entry.createdAt).toLocaleString()}</span>
+                <span><i class="fas fa-calendar-alt"></i> ${entryDate}</span>
                 <span>${getMoodEmoji(entry.mood)}</span>
             </div>
-            <p>${entry.text}</p>
+            <p>${entryText}</p>
             <div class="entry-tags">
-                ${entry.tags.map(t => `<span>#${t}</span>`).join('')}
-                <span class="category-tag">📁 ${entry.category}</span>
+                ${entryTags.map(t => `<span>#${t}</span>`).join('')}
+                <span class="category-tag">📁 ${entryCategory}</span>
             </div>
             <button class="btn-delete" onclick="deleteEntry('${entry.id}')" style="background:none; border:none; color:var(--error); cursor:pointer; margin-top:1rem;"><i class="fas fa-trash"></i> Delete</button>
         `;
@@ -142,6 +162,10 @@ function renderEntries(data) {
 async function addEntry() {
     const text = document.getElementById('journalInput').value.trim();
     if (!text) return;
+    if (!currentUser) {
+        alert('Please sign in before adding an entry');
+        return;
+    }
 
     const mood = document.getElementById('moodSelect').value;
     const category = document.getElementById('categorySelect').value;
@@ -152,7 +176,7 @@ async function addEntry() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'user-id': currentUser.id
+                'user-id': currentUser?.id || 'guest'
             },
             body: JSON.stringify({ text, mood, category, tags })
         });
@@ -160,21 +184,26 @@ async function addEntry() {
             document.getElementById('journalInput').value = '';
             document.getElementById('tagsInput').value = '';
             loadEntries();
+        } else {
+            const errData = await res.json();
+            console.warn('Entry not saved', errData);
         }
     } catch (err) {
-        console.error('Failed to add entry');
+        console.error('Failed to add entry', err);
     }
 }
 
 async function deleteEntry(id) {
     if (!confirm('Permanently delete this entry?')) return;
     try {
-        await fetch(`${API_BASE(`${API_BASE}/entries/${id}`)}`, {
+        await fetch(`${API_BASE}/entries/${id}`, {
             method: 'DELETE',
-            headers: { 'user-id': currentUser.id }
+            headers: { 'user-id': currentUser?.id }
         });
         loadEntries();
-    } catch (err) { }
+    } catch (err) {
+        console.error('Failed to delete entry', err);
+    }
 }
 
 function getMoodEmoji(mood) {
@@ -187,7 +216,14 @@ function renderD3MindMap() {
     const svg = d3.select("#mindmapSvg");
     svg.selectAll("*").remove();
 
-    if (entries.length === 0) return;
+    if (entries.length === 0) {
+        svg.append('text')
+            .attr('x', 20)
+            .attr('y', 50)
+            .attr('fill', '#888')
+            .text('No entries yet – add something and refresh.');
+        return;
+    }
 
     const width = document.getElementById('mindmapSvg').clientWidth;
     const height = 600;
@@ -198,15 +234,15 @@ function renderD3MindMap() {
     const links = [];
 
     // Group by category
-    const categories = [...new Set(entries.map(e => e.category))];
+    const categories = [...new Set(entries.map(e => e.category || 'General'))];
     categories.forEach(cat => {
         const catNode = { id: cat, type: 'category' };
         nodes.push(catNode);
         links.push({ source: rootNode.id, target: catNode.id });
 
         // Add entries as children
-        entries.filter(e => e.category === cat).slice(0, 5).forEach(entry => {
-            const entryNode = { id: entry.id, label: entry.text.substring(0, 20) + '...', type: 'entry' };
+        entries.filter(e => (e.category || 'General') === cat).slice(0, 5).forEach(entry => {
+            const entryNode = { id: entry.id, label: (entry.text || '').substring(0, 20) + '...', type: 'entry' };
             nodes.push(entryNode);
             links.push({ source: catNode.id, target: entryNode.id });
         });
@@ -296,9 +332,6 @@ function renderMoodPulse(distribution) {
     });
 }
 
-async function exportJson() {
-    window.location.href = `${API_BASE}/export`;
-}
 
 // --- Event Listeners ---
 document.getElementById('loginBtn').addEventListener('click', login);
@@ -308,9 +341,17 @@ document.getElementById('toRegister').addEventListener('click', toggleAuthCards)
 document.getElementById('toLogin').addEventListener('click', toggleAuthCards);
 document.querySelectorAll('.nav-links li').forEach(li => li.addEventListener('click', () => showModule(li.dataset.module)));
 document.getElementById('addBtn').addEventListener('click', addEntry);
-document.getElementById('exportJsonBtn').addEventListener('click', exportJson);
 document.getElementById('searchInput').addEventListener('input', (e) => {
     const term = e.target.value.toLowerCase();
     const filtered = entries.filter(ent => ent.text.toLowerCase().includes(term) || ent.tags.some(t => t.toLowerCase().includes(term)));
     renderEntries(filtered);
+});
+
+// map controls
+const refreshBtn = document.getElementById('refreshMap');
+const centerBtn = document.getElementById('centerMap');
+if (refreshBtn) refreshBtn.addEventListener('click', renderD3MindMap);
+if (centerBtn) centerBtn.addEventListener('click', () => {
+    // simple way to recenter: rerun simulation
+    renderD3MindMap();
 });

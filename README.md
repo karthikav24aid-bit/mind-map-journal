@@ -13,8 +13,9 @@ Backend
 
 Frontend
 - Folder: `frontend`
-- Open `frontend/index.html` in your browser.
-- To point the frontend to a remote backend, add `?api=https://your-url` to the page URL.
+- Recommended: start the backend and visit `http://localhost:5000` in your browser so that the frontend is served by the same server (this avoids CORS and API base issues).
+- If you prefer opening the file directly, the client will automatically fall back to `http://localhost:5000` as the API base when the page is loaded via `file://` or when running on `localhost`.
+- To point the frontend at a different backend URL, append `?api=https://your-url` to the page URL.
 
 Run a public tunnel
 
